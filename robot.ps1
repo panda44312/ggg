@@ -1,59 +1,59 @@
 param(
-    [Parameter(Mandatory=$true, HelpMessage="ÇëÊäÈë key Öµ£¬ÀıÈç£ºÓÃ»§Î¨Ò»±êÊ¶")]
+    [Parameter(Mandatory=$true, HelpMessage="è¯·è¾“å…¥ key å€¼ï¼Œä¾‹å¦‚ï¼šç”¨æˆ·å”¯ä¸€æ ‡è¯†")]
     [string]$key
 )
 
-# ½« key ½øĞĞ URL ±àÂë£¨·ÀÖ¹ÌØÊâ×Ö·ûµ¼ÖÂÎÊÌâ£©
+# å°† key è¿›è¡Œ URL ç¼–ç ï¼ˆé˜²æ­¢ç‰¹æ®Šå­—ç¬¦å¯¼è‡´é—®é¢˜ï¼‰
 $encodedKey = [System.Net.WebUtility]::UrlEncode($key)
 
-# Cloudflare Worker µÄ URL£¨ÇëÌæ»»ÎªÄãµÄ Worker ÓòÃû£©
+# Cloudflare Worker çš„ URLï¼ˆè¯·æ›¿æ¢ä¸ºä½ çš„ Worker åŸŸåï¼‰
 $baseUrl = "https://go.panda443212.workers.dev"
 
-# ¶¨Òå /c ºÍ /u ½Ó¿ÚµÄÍêÕû URL
+# å®šä¹‰ /c å’Œ /u æ¥å£çš„å®Œæ•´ URL
 $cUrl = "$baseUrl/c?key=$encodedKey"
 $uUrl = "$baseUrl/u?key=$encodedKey"
 
-# µ÷ÓÃ /c ½Ó¿Ú´´½¨ KV ¼ü
+# è°ƒç”¨ /c æ¥å£åˆ›å»º KV é”®
 try {
     $cResponse = Invoke-RestMethod -Uri $cUrl -Method GET
-    Write-Output "´´½¨ KV ¼ü³É¹¦: $cResponse"
+    Write-Output "åˆ›å»º KV é”®æˆåŠŸ: $cResponse"
 } catch {
-    Write-Output "´´½¨ KV Ê§°Ü: $_"
+    Write-Output "åˆ›å»º KV å¤±è´¥: $_"
     exit 1
 }
 
-# »ñÈ¡²Ù×÷ÏµÍ³°æ±¾
+# è·å–æ“ä½œç³»ç»Ÿç‰ˆæœ¬
 $osVersion = (Get-WmiObject Win32_OperatingSystem).Caption
 
-# »ñÈ¡ CPU ĞÅÏ¢
+# è·å– CPU ä¿¡æ¯
 $cpu = Get-WmiObject Win32_Processor | Select-Object -First 1
 $cpuUsage = (Get-Counter "\Processor(_Total)\% Processor Time").CounterSamples.CookedValue
 
-# »ñÈ¡ÄÚ´æĞÅÏ¢
+# è·å–å†…å­˜ä¿¡æ¯
 $memInfo = Get-WmiObject Win32_PhysicalMemory
 $totalMemory = [math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB, 2)
 $usedMemory = [math]::Round($totalMemory - ((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB), 2)
 
-# »ñÈ¡ÏÔ¿¨ĞÅÏ¢£¨Èç¹ûÓĞ£©
+# è·å–æ˜¾å¡ä¿¡æ¯ï¼ˆå¦‚æœæœ‰ï¼‰
 $gpuInfo = Get-WmiObject Win32_VideoController | Select-Object -First 1
 $gpuName = $gpuInfo.Name
 $gpuMemory = [math]::Round($gpuInfo.AdapterRAM / 1GB, 2)
 
-# »ñÈ¡ÆÁÄ»·Ö±æÂÊ
+# è·å–å±å¹•åˆ†è¾¨ç‡
 $screenWidth = (Get-WmiObject Win32_VideoController).CurrentHorizontalResolution
 $screenHeight = (Get-WmiObject Win32_VideoController).CurrentVerticalResolution
 $resolution = "$screenWidth x $screenHeight"
 
-# »ñÈ¡µ±Ç°ÓÃ»§Ãû
+# è·å–å½“å‰ç”¨æˆ·å
 $username = $env:USERNAME
 
-# »ñÈ¡»·¾³±äÁ¿
+# è·å–ç¯å¢ƒå˜é‡
 $envVariables = Get-ChildItem Env: | ForEach-Object { @{ Name = $_.Name; Value = $_.Value } }
 
-# »ñÈ¡µ±Ç°½ø³ÌÁĞ±í
+# è·å–å½“å‰è¿›ç¨‹åˆ—è¡¨
 $processList = Get-Process | Select-Object Name, Id, CPU, WorkingSet | Sort-Object CPU -Descending | Select-Object -First 10
 
-# ¹¹Ôì JSON Êı¾İ
+# æ„é€  JSON æ•°æ®
 $systemData = @{
     osVersion    = $osVersion
     cpu          = @{ name = $cpu.Name; usage = [math]::Round($cpuUsage, 2) }
@@ -65,13 +65,13 @@ $systemData = @{
     processes    = $processList
 }
 
-# ×ª»»Îª JSON
+# è½¬æ¢ä¸º JSON
 $jsonPayload = $systemData | ConvertTo-Json -Depth 3
 
-# ÉÏ´«Êı¾İµ½ Cloudflare Worker
+# ä¸Šä¼ æ•°æ®åˆ° Cloudflare Worker
 try {
     $uResponse = Invoke-RestMethod -Uri $uUrl -Method POST -Body $jsonPayload -ContentType "application/json"
-    Write-Output "ÉÏ´«Êı¾İ³É¹¦: $uResponse"
+    Write-Output "ä¸Šä¼ æ•°æ®æˆåŠŸ: $uResponse"
 } catch {
-    Write-Output "ÉÏ´«Ê§°Ü: $_"
+    Write-Output "ä¸Šä¼ å¤±è´¥: $_"
 }
